@@ -8,36 +8,12 @@ namespace test_practice.Data
     public class SeedData
     {
         public static async Task Initialize(
-            ApplicationDbContext context,
-            UserManager<IdentityUser> userManager,
-            RoleManager<IdentityRole> roleManager)
+            ApplicationDbContext context)
         {
 
             await context.Database.EnsureCreatedAsync();
 
-            if (!await roleManager.RoleExistsAsync("Admin"))
-            {
-                await roleManager.CreateAsync(new IdentityRole("Admin"));
-            }
-
-            var adminEmail = "admin@store.com";
-            var adminUser = await userManager.FindByNameAsync(adminEmail);
-
-            if (adminUser == null)
-            {
-                adminUser = new IdentityUser
-                {
-                    UserName = adminEmail,
-                    Email = adminEmail,
-                    EmailConfirmed = true,
-                };
-
-                var result = await userManager.CreateAsync(adminUser, "Admin123");
-                if (result.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(adminUser, "Admin");
-                }
-            }
+        
 
             if (!context.Categories.Any())
             {

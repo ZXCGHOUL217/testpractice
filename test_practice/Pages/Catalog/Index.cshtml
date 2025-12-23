@@ -1,0 +1,253 @@
+﻿@page
+@model test_practice.Pages.Catalog.IndexModel
+@{
+    ViewData["Title"] = "Каталог товаров";
+}
+
+<div class="container">
+    <div class="row">
+        <!-- Заголовок -->
+        <div class="col-12">
+            <h1 class="my-4">Каталог товаров</h1>
+
+            <!-- Поиск и фильтры -->
+            <form method="get" class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <input type="text" class="form-control"
+                           placeholder="Поиск товаров..."
+                           name="SearchQuery"
+                           value="@Model.SearchQuery" />
+                </div>
+
+                <div class="col-md-3">
+                    <select class="form-select" name="CategoryId">
+                        <option value="">Все категории</option>
+                        @foreach (var category in Model.Categories)
+                        {
+                            <option value="@category.Id"
+                                    selected="@(Model.CategoryId == category.Id)">
+                                @category.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <select class="form-select" name="SortBy">
+                        <option value="name" selected="@(Model.SortBy == "name")">По названию</option>
+                        <option value="price_asc" selected="@(Model.SortBy == "price_asc")">Цена ↑</option>
+                        <option value="price_desc" selected="@(Model.SortBy == "price_desc")">Цена ↓</option>
+                    </select>
+                </div>
+
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">Найти</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Боковая панель фильтров (только на ПК) -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5 class="mb-0">Категории</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="/Catalog"
+                       class="list-group-item list-group-item-action @(Model.CategoryId == null ? "active" : "")">
+                        Все товары
+                        <span class="badge bg-secondary float-end">@Model.TotalProducts</span>
+                    </a>
+
+                    @foreach (var category in Model.Categories)
+                    {
+                        <a href="/Catalog?CategoryId=@category.Id"
+                           class="list-group-item list-group-item-action @(Model.CategoryId == category.Id ? "active" : "")">
+                            @category.Name
+                            <span class="badge bg-secondary float-end">
+                                @category.Products?.Count
+                            </span>
+                        </a>
+                    }
+                </div>
+
+                <!-- Фильтр по цене (можно добавить позже) -->
+                <!-- <div class="card-body">
+                    <h6>Цена</h6>
+                    <input type="range" class="form-range" />
+                </div> -->
+            </div>
+        </div>
+
+        <!-- Основной контент -->
+        <div class="col-lg-9">
+            <!-- Информация о результатах -->
+            <div class="mb-3">
+                @if (Model.CategoryId.HasValue)
+                {
+                    var category = Model.Categories.FirstOrDefault(c => c.Id == Model.CategoryId);
+                    <p>Категория: <strong>@category?.Name</strong></p>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.SearchQuery))
+                {
+                    <p>Результаты поиска: <strong>"@Model.SearchQuery"</strong></p>
+                }
+
+                <p>Найдено товаров: <strong>@Model.TotalProducts</strong></p>
+            </div>
+
+            <!-- Сетка товаров -->
+            @if (Model.Products.Any())
+            {
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    @foreach (var product in Model.Products)
+                    {
+                        <div class="col">
+                            <div class="card h-100 shadow-sm">
+                                <img src="@product.ImageUrl"
+                                     class="card-img-top"
+                                     alt="@product.Name"
+                                     style="height: 200px; object-fit: cover;"
+                                     onerror="this.src='https://picsum.photos/300/200?random=1'" />
+
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title mb-0">@product.Name</h5>
+                                        <span class="badge bg-info">@product.Category?.Name</span>
+                                    </div>
+
+                                    <p class="card-text text-muted small mb-3">
+                                        @(product.Description?.Length > 100 ?
+                                            product.Description.Substring(0, 100) + "..." :
+                                            product.Description)
+                                    </p>
+
+                                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                                        <span class="h5 text-success">@product.Price.ToString("C")</span>
+
+                                        <div>
+                                            <a href="/Catalog/Details/@product.Id"
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i> Подробнее
+                                            </a>
+                                            <button class="btn btn-primary btn-sm ms-1"
+                                                    onclick="addToCart(@product.Id)">
+                                                <i class="fas fa-cart-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-footer bg-transparent">
+                                    <small class="text-muted">
+                                        <i class="fas fa-box"></i> В наличии: @product.StockQuantity шт.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Пагинация -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav class="mt-5">
+                        <ul class="pagination justify-content-center">
+                            @if (Model.CurrentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="/Catalog?page=@(Model.CurrentPage-1)&CategoryId=@Model.CategoryId&SearchQuery=@Model.SearchQuery&SortBy=@Model.SortBy">
+                                        ← Назад
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link"
+                                       href="/Catalog?page=@i&CategoryId=@Model.CategoryId&SearchQuery=@Model.SearchQuery&SortBy=@Model.SortBy">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            @if (Model.CurrentPage < Model.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="/Catalog?page=@(Model.CurrentPage+1)&CategoryId=@Model.CategoryId&SearchQuery=@Model.SearchQuery&SortBy=@Model.SortBy">
+                                        Вперед →
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <h3>😕 Товары не найдены</h3>
+                    <p class="text-muted">Попробуйте изменить параметры поиска</p>
+                    <a href="/Catalog" class="btn btn-primary">Показать все товары</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Мобильная навигация по категориям -->
+<div class="d-lg-none fixed-bottom bg-white border-top py-2">
+    <div class="container">
+        <div class="d-flex overflow-auto">
+            <a href="/Catalog"
+               class="btn btn-sm @(Model.CategoryId == null ? "btn-primary" : "btn-outline-primary") me-2">
+                Все
+            </a>
+
+            @foreach (var category in Model.Categories)
+            {
+                <a href="/Catalog?CategoryId=@category.Id"
+                   class="btn btn-sm @(Model.CategoryId == category.Id ? "btn-primary" : "btn-outline-primary") me-2">
+                    @category.Name
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Стили -->
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+    .card-img-top {
+        background-color: #f8f9fa;
+    }
+
+    .list-group-item.active {
+        background-color: #4361ee;
+        border-color: #4361ee;
+    }
+
+    .fixed-bottom {
+        z-index: 1000;
+    }
+</style>
+
+<!-- Скрипт для корзины (временно) -->
+<script>
+    function addToCart(productId) {
+        alert('Товар добавлен в корзину! ID: ' + productId);
+        // Здесь будет реальная логика добавления в корзину
+    }
+</script>

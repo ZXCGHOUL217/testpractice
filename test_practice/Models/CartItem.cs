@@ -1,12 +1,20 @@
-﻿namespace test_practice.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace test_practice.Models
 {
     public class CartItem
     {
         public int Id { get; set; }
+        [Required]
         public int ProductId { get; set; }
         public Product? Product { get; set; }
-        public int Quantity { get; set; }
+        [Required]
+        [Range(1, 100)]
+        public int Quantity { get; set; } = 1;
+
         public string? SessionId { get; set; }
         public string? UserId { get; set; }
+
+        public DateTime AddedDate { get; set; } = DateTime.Now;
     }
 }
