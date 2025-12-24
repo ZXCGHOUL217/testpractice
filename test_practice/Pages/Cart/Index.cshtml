@@ -48,7 +48,7 @@
                                             <button type="submit" asp-page-handler="Update" 
                                                     name="quantity" value="@(item.Quantity - 1)"
                                                     class="btn btn-outline-secondary" 
-                                                    @(item.Quantity <= 1 ? "disabled" : "")>
+                                                    >
                                                 −
                                             </button>
                                             <input type="number" 
@@ -118,7 +118,7 @@
                                             <button type="submit" asp-page-handler="Update" 
                                                     name="quantity" value="@(item.Quantity - 1)"
                                                     class="btn btn-outline-secondary btn-sm" 
-                                                    @(item.Quantity <= 1 ? "disabled" : "")>
+                                                    >
                                                 −
                                             </button>
                                             <span class="form-control text-center bg-white">@item.Quantity</span>
